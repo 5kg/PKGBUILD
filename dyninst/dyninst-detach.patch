@@ -1,0 +1,43 @@
+From ad2a593556cf6793baa33510108ebf064c9c9ee0 Mon Sep 17 00:00:00 2001
+From: Josh Stone <jistone@redhat.com>
+Date: Fri, 8 Nov 2013 17:09:24 -0800
+Subject: [PATCH] dyninstAPI: Remove syscall instrumentation on detach
+
+During PCProcess::bootstrapProcess(), many syscalls are instrumented,
+which may involve DyninstAPI_RT breakpoints.  If the mutator later
+detaches, then there's no one to catch the instrumentation signal, so
+the detached mutatee will crash.
+
+With this patch, PCProcess will remove its syscall instrumentation
+points when the mutator detaches.  It's still up to mutators to remove
+their own instrumentation when desired.
+
+Reported-by: Zifei Tong <soariez@gmail.com>
+Signed-off-by: Josh Stone <jistone@redhat.com>
+---
+ dyninstAPI/src/dynProcess.C | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/dyninstAPI/src/dynProcess.C b/dyninstAPI/src/dynProcess.C
+index c3c28c6..de9945e 100644
+--- a/dyninstAPI/src/dynProcess.C
++++ b/dyninstAPI/src/dynProcess.C
+@@ -1163,6 +1163,15 @@ bool PCProcess::detachProcess(bool /*cont*/) {
+ 
+     if( !isAttached() ) return false;
+ 
++    if (tracedSyscalls_) {
++        tracedSyscalls_->removePreFork();
++        tracedSyscalls_->removePostFork();
++        tracedSyscalls_->removePreExec();
++        tracedSyscalls_->removePostExec();
++        tracedSyscalls_->removePreExit();
++        tracedSyscalls_->removePreLwpExit();
++    }
++
+     // TODO figure out if ProcControl should care about continuing a process
+     // after detach
+     
+-- 
+1.7.12
+

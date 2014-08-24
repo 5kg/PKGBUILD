@@ -24,7 +24,8 @@ package() {
     install -D $srcdir/distorm3/COPYING $pkgdir/usr/share/licenses/distorm/COPYING
 
     install -D $srcdir/distorm3/include/distorm.h $pkgdir/usr/include/distorm.h
-    cd $pkgdir
-    ln -s `find -name libdistorm3.so | sed 's|^.||'` $pkgdir/usr/lib/libdistorm3.so
+    install -D $srcdir/distorm3/include/mnemonics.h $pkgdir/usr/include/mnemonics.h
+
+    ln -s `find $pkgdir -name libdistorm3.so | sed "s|^$pkgdir||"` $pkgdir/usr/lib/libdistorm3.so
 }
 
